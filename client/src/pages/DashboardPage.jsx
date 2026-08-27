@@ -4,6 +4,7 @@ import { githubApi } from '../services/api';
 import Navbar from '../components/Navbar';
 import ProfileCard from '../features/profile/ProfileCard';
 import ContributionHeatmap from '../features/heatmap/ContributionHeatmap';
+import LanguageCharts from '../features/languages/LanguageCharts';
 import { FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -14,6 +15,8 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [languages, setLanguages] = useState(null);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -21,16 +24,23 @@ const DashboardPage = () => {
         setLoading(true);
         setError(null);
         
-        // Phase 4: Fetch only profile for now
+        // Fetch profile first to show UI faster
         const profileData = await githubApi.getProfile(username);
         setProfile(profileData);
-        
+        setLoading(false); // Stop main loading so profile shows
+
+        // Then fetch languages (can take longer because it aggregates repos)
+        setLanguagesLoading(true);
+        const langsData = await githubApi.getLanguages(username);
+        setLanguages(langsData);
+
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError(err.response?.data?.message || 'Failed to load user data');
         toast.error('Failed to load user data');
-      } finally {
         setLoading(false);
+      } finally {
+        setLanguagesLoading(false);
       }
     };
 
@@ -88,14 +98,16 @@ const DashboardPage = () => {
             {/* Phase 5: Heatmap placeholder */}
             <ContributionHeatmap username={username} />
 
-            {/* Phase 6: Language charts placeholder */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 h-64 flex items-center justify-center border-dashed">
-                <span className="text-gray-500">Language Chart (Coming soon)</span>
-              </div>
-              <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 h-64 flex items-center justify-center border-dashed">
-                <span className="text-gray-500">Repo Stats (Coming soon)</span>
-              </div>
+            {/* Phase 6: Language charts */}
+            <div className="grid grid-cols-1 gap-6">
+              {languagesLoading ? (
+                <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 h-64 flex flex-col items-center justify-center">
+                  <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mb-3" />
+                  <span className="text-gray-500 text-sm">Analyzing repository languages...</span>
+                </div>
+              ) : (
+                <LanguageCharts languages={languages} />
+              )}
             </div>
             
             {/* Phase 7: Repos Grid placeholder */}
