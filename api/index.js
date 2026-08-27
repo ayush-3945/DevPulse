@@ -8,9 +8,9 @@ const connectDB = require('./_src/config/db');
 
 const app = express();
 
-if (process.env.MONGODB_URI) {
-  connectDB();
-}
+// if (process.env.MONGODB_URI) {
+//   connectDB();
+// }
 
 app.use(helmet());
 app.use(cors({
