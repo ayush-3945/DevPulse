@@ -31,10 +31,10 @@ const DashboardPage = () => {
         setLoading(true);
         setError(null);
         
-        // 1. Fetch profile first (with 8s safety timeout)
+        // 1. Fetch profile first (with 15s safety timeout for cold-starts)
         const profilePromise = githubApi.getProfile(username);
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timed out. Please check your network or try again.')), 8000)
+          setTimeout(() => reject(new Error('Request timed out. Please check your network or try again.')), 15000)
         );
 
         const profileData = await Promise.race([profilePromise, timeoutPromise]);

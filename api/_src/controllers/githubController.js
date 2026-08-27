@@ -89,10 +89,10 @@ const getLanguages = async (req, res, next) => {
     // First get repos
     const repos = await githubService.getUserRepos(username);
     
-    // Aggregate languages from top 15 non-fork repos with language
+    // Aggregate languages from top 5 non-fork repos (fast & rate-limit safe)
     const targetRepos = repos
       .filter(repo => repo.language && !repo.fork)
-      .slice(0, 15);
+      .slice(0, 5);
     
     const languagePromises = targetRepos.map(repo => 
       githubService.getRepoLanguages(username, repo.name).catch(() => null)
