@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { githubApi } from '../services/api';
 import Navbar from '../components/Navbar';
 import ProfileCard from '../features/profile/ProfileCard';
+import ContributionHeatmap from '../features/heatmap/ContributionHeatmap';
 import { FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -85,9 +86,7 @@ const DashboardPage = () => {
           {/* Right Column (Heatmap, Languages, Repos) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Phase 5: Heatmap placeholder */}
-            <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 h-48 flex items-center justify-center border-dashed">
-              <span className="text-gray-500">Contribution Heatmap (Coming soon)</span>
-            </div>
+            <ContributionHeatmap username={username} />
 
             {/* Phase 6: Language charts placeholder */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
