@@ -25,23 +25,23 @@ const LanguageCharts = ({ languages }) => {
     .sort((a, b) => b.bytes - a.bytes)
     .slice(0, 6); // Take top 6 languages
 
-  // Beautiful brand colors for the chart
+  // Amber / Gold focused palette
   const backgroundColors = [
-    'rgba(168, 85, 247, 0.8)', // purple-500
-    'rgba(59, 130, 246, 0.8)', // blue-500
-    'rgba(236, 72, 153, 0.8)', // pink-500
-    'rgba(16, 185, 129, 0.8)', // emerald-500
-    'rgba(245, 158, 11, 0.8)', // amber-500
-    'rgba(99, 102, 241, 0.8)', // indigo-500
+    '#F5A623', // Primary (highest %) - main amber gold
+    '#FFC15E', // Second - lighter amber
+    '#C97F1C', // Third - deep rich amber
+    '#8A7350', // Fourth - muted warm gold
+    '#6B5A3E', // Fifth - warm bronze
+    '#4A3E2B', // Sixth - dark warm tone
   ];
 
   const borderColors = [
-    'rgba(168, 85, 247, 1)',
-    'rgba(59, 130, 246, 1)',
-    'rgba(236, 72, 153, 1)',
-    'rgba(16, 185, 129, 1)',
-    'rgba(245, 158, 11, 1)',
-    'rgba(99, 102, 241, 1)',
+    '#F5A623',
+    '#FFC15E',
+    '#C97F1C',
+    '#8A7350',
+    '#6B5A3E',
+    '#4A3E2B',
   ];
 
   const data = {
