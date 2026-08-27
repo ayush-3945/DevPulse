@@ -8,20 +8,27 @@ const getProfile = async (req, res, next) => {
       return res.status(400).json({ status: 'error', message: 'Username is required' });
     }
 
-    // Check cache first
-    let cached = await CachedProfile.findOne({ username: username.toLowerCase() });
-    if (cached && cached.profileData) {
-      return res.status(200).json({ status: 'success', data: cached.profileData, cached: true });
+    const mongoose = require('mongoose');
+    let cached = null;
+    
+    // Check cache first if connected
+    if (mongoose.connection.readyState === 1) {
+      cached = await CachedProfile.findOne({ username: username.toLowerCase() });
+      if (cached && cached.profileData) {
+        return res.status(200).json({ status: 'success', data: cached.profileData, cached: true });
+      }
     }
 
     const profileData = await githubService.getUserProfile(username);
 
-    // Save to cache
-    if (!cached) {
-      cached = new CachedProfile({ username: username.toLowerCase() });
+    // Save to cache if connected
+    if (mongoose.connection.readyState === 1) {
+      if (!cached) {
+        cached = new CachedProfile({ username: username.toLowerCase() });
+      }
+      cached.profileData = profileData;
+      await cached.save();
     }
-    cached.profileData = profileData;
-    await cached.save();
 
     res.status(200).json({
       status: 'success',
@@ -36,18 +43,25 @@ const getRepos = async (req, res, next) => {
   try {
     const { username } = req.params;
 
-    let cached = await CachedProfile.findOne({ username: username.toLowerCase() });
-    if (cached && cached.repoData && cached.repoData.length > 0) {
-      return res.status(200).json({ status: 'success', data: cached.repoData, cached: true });
+    const mongoose = require('mongoose');
+    let cached = null;
+
+    if (mongoose.connection.readyState === 1) {
+      cached = await CachedProfile.findOne({ username: username.toLowerCase() });
+      if (cached && cached.repoData && cached.repoData.length > 0) {
+        return res.status(200).json({ status: 'success', data: cached.repoData, cached: true });
+      }
     }
 
     const reposData = await githubService.getUserRepos(username);
 
-    if (!cached) {
-      cached = new CachedProfile({ username: username.toLowerCase() });
+    if (mongoose.connection.readyState === 1) {
+      if (!cached) {
+        cached = new CachedProfile({ username: username.toLowerCase() });
+      }
+      cached.repoData = reposData;
+      await cached.save();
     }
-    cached.repoData = reposData;
-    await cached.save();
 
     res.status(200).json({
       status: 'success',
@@ -62,9 +76,14 @@ const getLanguages = async (req, res, next) => {
   try {
     const { username } = req.params;
 
-    let cached = await CachedProfile.findOne({ username: username.toLowerCase() });
-    if (cached && cached.languageData) {
-      return res.status(200).json({ status: 'success', data: cached.languageData, cached: true });
+    const mongoose = require('mongoose');
+    let cached = null;
+
+    if (mongoose.connection.readyState === 1) {
+      cached = await CachedProfile.findOne({ username: username.toLowerCase() });
+      if (cached && cached.languageData) {
+        return res.status(200).json({ status: 'success', data: cached.languageData, cached: true });
+      }
     }
     
     // First get repos
@@ -85,11 +104,13 @@ const getLanguages = async (req, res, next) => {
       });
     });
 
-    if (!cached) {
-      cached = new CachedProfile({ username: username.toLowerCase() });
+    if (mongoose.connection.readyState === 1) {
+      if (!cached) {
+        cached = new CachedProfile({ username: username.toLowerCase() });
+      }
+      cached.languageData = aggregatedLanguages;
+      await cached.save();
     }
-    cached.languageData = aggregatedLanguages;
-    await cached.save();
 
     res.status(200).json({
       status: 'success',
