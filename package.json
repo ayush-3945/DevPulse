@@ -1,6 +1,11 @@
 {
   "name": "devpulse-root",
   "version": "1.0.0",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "node api/index.js",
+    "client": "npm run dev --prefix client"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "cors": "^2.8.6",

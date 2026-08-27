@@ -29,31 +29,48 @@ const DashboardPage = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch profile first to show UI faster
+        // 1. Fetch profile first
         const profileData = await githubApi.getProfile(username);
         setProfile(profileData);
-        setLoading(false); // Stop main loading so profile shows
+        setLoading(false); // Render dashboard layout immediately
 
-        // Then fetch repos and languages concurrently
+        // 2. Fetch repos & languages concurrently with fault-tolerance
         setLanguagesLoading(true);
-        const [reposData, langsData] = await Promise.all([
-          githubApi.getRepos(username),
-          githubApi.getLanguages(username)
-        ]);
-        
-        setRepos(reposData);
-        setLanguages(langsData);
-        setLanguagesLoading(false);
+        try {
+          const [reposData, langsData] = await Promise.allSettled([
+            githubApi.getRepos(username),
+            githubApi.getLanguages(username)
+          ]);
+          
+          if (reposData.status === 'fulfilled') setRepos(reposData.value);
+          if (langsData.status === 'fulfilled') setLanguages(langsData.value);
+        } catch (e) {
+          console.warn('Repos/languages partial error:', e);
+        } finally {
+          setLanguagesLoading(false);
+        }
 
-        // Finally, fetch AI personality (takes longest)
+        // 3. Fetch AI personality in background without blocking
         setAiLoading(true);
-        const aiData = await githubApi.getPersonality(username);
-        setPersonality(aiData);
+        try {
+          const aiData = await githubApi.getPersonality(username);
+          setPersonality(aiData);
+        } catch (aiErr) {
+          console.warn('AI personality unavailable:', aiErr);
+        } finally {
+          setAiLoading(false);
+        }
 
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
-        setError(err.response?.data?.message || 'Failed to load user data');
-        toast.error('Failed to load user data');
+        const errorMsg = err.response?.data?.message || err.message || 'Failed to load user data';
+        const is404 = err.response?.status === 404;
+        
+        setError({
+          title: is404 ? 'User Not Found' : 'Connection / API Error',
+          message: errorMsg
+        });
+        toast.error(errorMsg);
         setLoading(false);
       } finally {
         setLanguagesLoading(false);
@@ -69,8 +86,8 @@ const DashboardPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-gray-400 animate-pulse">Analyzing GitHub DNA for {username}...</p>
+        <div className="w-16 h-16 border-4 border-amber-gold border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-gray-400 animate-pulse">Analyzing GitHub DNA for @{username}...</p>
       </div>
     );
   }
@@ -82,11 +99,11 @@ const DashboardPage = () => {
         <div className="flex-grow flex items-center justify-center p-4">
           <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 max-w-md text-center">
             <FiAlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">User Not Found</h2>
-            <p className="text-gray-400 mb-6">{error}</p>
+            <h2 className="text-xl font-bold text-white mb-2">{error.title}</h2>
+            <p className="text-gray-400 mb-6">{error.message}</p>
             <button 
               onClick={() => navigate('/')}
-              className="flex items-center gap-2 mx-auto bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 mx-auto bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors font-medium"
             >
               <FiArrowLeft /> Back to Search
             </button>

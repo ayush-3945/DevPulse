@@ -89,20 +89,35 @@ const getLanguages = async (req, res, next) => {
     // First get repos
     const repos = await githubService.getUserRepos(username);
     
-    // Aggregate languages from all repos concurrently
-    const languagePromises = repos
-      .filter(repo => repo.language && !repo.fork) // only include non-fork repos that have a primary language
-      .map(repo => githubService.getRepoLanguages(username, repo.name));
+    // Aggregate languages from top 15 non-fork repos with language
+    const targetRepos = repos
+      .filter(repo => repo.language && !repo.fork)
+      .slice(0, 15);
     
-    const reposLanguages = await Promise.all(languagePromises);
+    const languagePromises = targetRepos.map(repo => 
+      githubService.getRepoLanguages(username, repo.name).catch(() => null)
+    );
+    
+    const reposLanguages = await Promise.allSettled(languagePromises);
     
     // Combine language bytes
     const aggregatedLanguages = {};
-    reposLanguages.forEach(repoLangs => {
-      Object.keys(repoLangs).forEach(lang => {
-        aggregatedLanguages[lang] = (aggregatedLanguages[lang] || 0) + repoLangs[lang];
-      });
+    reposLanguages.forEach(result => {
+      if (result.status === 'fulfilled' && result.value) {
+        Object.keys(result.value).forEach(lang => {
+          aggregatedLanguages[lang] = (aggregatedLanguages[lang] || 0) + result.value[lang];
+        });
+      }
     });
+
+    // Fallback if detailed byte endpoints returned empty: count primary languages
+    if (Object.keys(aggregatedLanguages).length === 0) {
+      targetRepos.forEach(repo => {
+        if (repo.language) {
+          aggregatedLanguages[repo.language] = (aggregatedLanguages[repo.language] || 0) + 1000;
+        }
+      });
+    }
 
     if (mongoose.connection.readyState === 1) {
       if (!cached) {

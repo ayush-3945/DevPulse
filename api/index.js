@@ -1,64 +1,62 @@
-let appHandler;
-let initError = null;
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const connectDB = require('./_src/config/db');
+const { errorHandler } = require('./_src/middleware/errorHandler');
 
-try {
-  require('dotenv').config();
-  const express = require('express');
-  const cors = require('cors');
-  const helmet = require('helmet');
-  const rateLimit = require('express-rate-limit');
-  const { errorHandler } = require('./_src/middleware/errorHandler');
+require('dotenv').config();
 
-  const app = express();
+const app = express();
 
-  app.use(helmet());
-  app.use(cors({
-    origin: '*', 
-    credentials: true
-  }));
-  app.use(express.json());
+app.use(helmet());
+app.use(cors({
+  origin: '*', 
+  credentials: true
+}));
+app.use(express.json());
 
-  const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
-    max: 100, 
-    message: 'Too many requests from this IP, please try again after 15 minutes',
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 150, 
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-  app.use('/api/', apiLimiter);
+app.use('/api/', apiLimiter);
 
-  app.use('/api/github', require('./_src/routes/githubRoutes'));
-  app.use('/api/ai', require('./_src/routes/aiRoutes'));
+// Mount routes on both /api/github and /github for local & Vercel flexibility
+app.use('/api/github', require('./_src/routes/githubRoutes'));
+app.use('/github', require('./_src/routes/githubRoutes'));
 
-  app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'ok', message: 'DevPulse API is running' });
-  });
+app.use('/api/ai', require('./_src/routes/aiRoutes'));
+app.use('/ai', require('./_src/routes/aiRoutes'));
 
-  app.use(errorHandler);
-  
-  appHandler = app;
-} catch (error) {
-  initError = error;
+app.get(['/api/health', '/health'], (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'DevPulse API is running' });
+});
+
+app.use(errorHandler);
+
+// Auto-connect to MongoDB if URI is provided
+if (process.env.MONGODB_URI) {
+  connectDB();
 }
 
+// If run directly (local development: node api/index.js)
+const PORT = process.env.PORT || 5000;
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 DevPulse API server running at http://localhost:${PORT}`);
+  });
+}
+
+// Vercel Serverless Handler
 module.exports = (req, res) => {
   if (process.env.MONGODB_URI) {
     connectDB();
   }
-  if (initError) {
-    return res.status(500).json({ 
-      status: 'error', 
-      message: 'Initialization failed', 
-      errorName: initError.name,
-      errorMessage: initError.message,
-      stack: initError.stack
-    });
-  }
-  
-  if (req.url.includes('/api/health')) {
-    return res.status(200).json({ status: 'ok', message: 'Vercel raw handler is running' });
-  }
-  
-  return appHandler(req, res);
+  return app(req, res);
 };
+module.exports.app = app;
