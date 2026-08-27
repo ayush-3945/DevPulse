@@ -54,9 +54,6 @@ if (require.main === module) {
 
 // Vercel Serverless Handler
 module.exports = (req, res) => {
-  if (process.env.MONGODB_URI) {
-    connectDB();
-  }
   return app(req, res);
 };
 module.exports.app = app;
