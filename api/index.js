@@ -43,6 +43,9 @@ try {
 }
 
 module.exports = (req, res) => {
+  if (process.env.MONGODB_URI) {
+    connectDB();
+  }
   if (initError) {
     return res.status(500).json({ 
       status: 'error', 
