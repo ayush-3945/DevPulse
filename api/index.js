@@ -39,4 +39,10 @@ app.get('/api/health', (req, res) => {
 
 app.use(errorHandler);
 
-module.exports = app;
+module.exports = (req, res) => {
+  if (req.url.includes('/api/health')) {
+    return res.status(200).json({ status: 'ok', message: 'Vercel raw handler is running' });
+  }
+  // Let Express handle it
+  return app(req, res);
+};
