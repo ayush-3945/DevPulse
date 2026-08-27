@@ -1,4 +1,5 @@
 const githubService = require('../services/githubService');
+const CachedProfile = require('../models/CachedProfile');
 
 const getProfile = async (req, res, next) => {
   try {
@@ -7,7 +8,21 @@ const getProfile = async (req, res, next) => {
       return res.status(400).json({ status: 'error', message: 'Username is required' });
     }
 
+    // Check cache first
+    let cached = await CachedProfile.findOne({ username: username.toLowerCase() });
+    if (cached && cached.profileData) {
+      return res.status(200).json({ status: 'success', data: cached.profileData, cached: true });
+    }
+
     const profileData = await githubService.getUserProfile(username);
+
+    // Save to cache
+    if (!cached) {
+      cached = new CachedProfile({ username: username.toLowerCase() });
+    }
+    cached.profileData = profileData;
+    await cached.save();
+
     res.status(200).json({
       status: 'success',
       data: profileData
@@ -20,7 +35,20 @@ const getProfile = async (req, res, next) => {
 const getRepos = async (req, res, next) => {
   try {
     const { username } = req.params;
+
+    let cached = await CachedProfile.findOne({ username: username.toLowerCase() });
+    if (cached && cached.repoData && cached.repoData.length > 0) {
+      return res.status(200).json({ status: 'success', data: cached.repoData, cached: true });
+    }
+
     const reposData = await githubService.getUserRepos(username);
+
+    if (!cached) {
+      cached = new CachedProfile({ username: username.toLowerCase() });
+    }
+    cached.repoData = reposData;
+    await cached.save();
+
     res.status(200).json({
       status: 'success',
       data: reposData
@@ -33,6 +61,11 @@ const getRepos = async (req, res, next) => {
 const getLanguages = async (req, res, next) => {
   try {
     const { username } = req.params;
+
+    let cached = await CachedProfile.findOne({ username: username.toLowerCase() });
+    if (cached && cached.languageData) {
+      return res.status(200).json({ status: 'success', data: cached.languageData, cached: true });
+    }
     
     // First get repos
     const repos = await githubService.getUserRepos(username);
@@ -51,6 +84,12 @@ const getLanguages = async (req, res, next) => {
         aggregatedLanguages[lang] = (aggregatedLanguages[lang] || 0) + repoLangs[lang];
       });
     });
+
+    if (!cached) {
+      cached = new CachedProfile({ username: username.toLowerCase() });
+    }
+    cached.languageData = aggregatedLanguages;
+    await cached.save();
 
     res.status(200).json({
       status: 'success',
