@@ -24,13 +24,22 @@ const DashboardPage = () => {
   const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        // 1. Fetch profile first
-        const profileData = await githubApi.getProfile(username);
+        // 1. Fetch profile first (with 8s safety timeout)
+        const profilePromise = githubApi.getProfile(username);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timed out. Please check your network or try again.')), 8000)
+        );
+
+        const profileData = await Promise.race([profilePromise, timeoutPromise]);
+        if (!isMounted) return;
+
         setProfile(profileData);
         setLoading(false); // Render dashboard layout immediately
 
@@ -42,45 +51,54 @@ const DashboardPage = () => {
             githubApi.getLanguages(username)
           ]);
           
-          if (reposData.status === 'fulfilled') setRepos(reposData.value);
-          if (langsData.status === 'fulfilled') setLanguages(langsData.value);
+          if (isMounted) {
+            if (reposData.status === 'fulfilled') setRepos(reposData.value);
+            if (langsData.status === 'fulfilled') setLanguages(langsData.value);
+          }
         } catch (e) {
           console.warn('Repos/languages partial error:', e);
         } finally {
-          setLanguagesLoading(false);
+          if (isMounted) setLanguagesLoading(false);
         }
 
         // 3. Fetch AI personality in background without blocking
         setAiLoading(true);
         try {
           const aiData = await githubApi.getPersonality(username);
-          setPersonality(aiData);
+          if (isMounted) setPersonality(aiData);
         } catch (aiErr) {
           console.warn('AI personality unavailable:', aiErr);
         } finally {
-          setAiLoading(false);
+          if (isMounted) setAiLoading(false);
         }
 
       } catch (err) {
+        if (!isMounted) return;
         console.error('Error fetching dashboard data:', err);
         const errorMsg = err.response?.data?.message || err.message || 'Failed to load user data';
         const is404 = err.response?.status === 404;
         
         setError({
-          title: is404 ? 'User Not Found' : 'Connection / API Error',
+          title: is404 ? 'User Not Found' : 'Connection / Timeout Error',
           message: errorMsg
         });
         toast.error(errorMsg);
         setLoading(false);
       } finally {
-        setLanguagesLoading(false);
-        setAiLoading(false);
+        if (isMounted) {
+          setLanguagesLoading(false);
+          setAiLoading(false);
+        }
       }
     };
 
     if (username) {
       fetchDashboardData();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [username]);
 
   if (loading) {
