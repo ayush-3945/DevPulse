@@ -17,7 +17,7 @@ if (process.env.MONGODB_URI) {
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.VITE_API_URL || 'http://localhost:5173', // Vite default port
+  origin: '*', // Allow all origins for Vercel
   credentials: true
 }));
 app.use(express.json());
