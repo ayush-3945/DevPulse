@@ -1,15 +1,21 @@
-const { Octokit } = require('octokit');
+let octokitInstance = null;
 
-// Initialize Octokit (will use token from environment if available)
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN || undefined,
-});
+const getOctokit = async () => {
+  if (!octokitInstance) {
+    const { Octokit } = await import('octokit');
+    octokitInstance = new Octokit({
+      auth: process.env.GITHUB_TOKEN || undefined,
+    });
+  }
+  return octokitInstance;
+};
 
 /**
  * Fetch basic user profile data
  */
 const getUserProfile = async (username) => {
   try {
+    const octokit = await getOctokit();
     const { data } = await octokit.rest.users.getByUsername({
       username,
     });
@@ -29,6 +35,7 @@ const getUserRepos = async (username) => {
   try {
     // Note: This fetches up to 100 public repos. 
     // For users with more, pagination would be needed.
+    const octokit = await getOctokit();
     const { data } = await octokit.rest.repos.listForUser({
       username,
       type: 'owner',
@@ -46,6 +53,7 @@ const getUserRepos = async (username) => {
  */
 const getRepoLanguages = async (owner, repo) => {
   try {
+    const octokit = await getOctokit();
     const { data } = await octokit.rest.repos.listLanguages({
       owner,
       repo,
@@ -61,6 +69,7 @@ const getRepoLanguages = async (owner, repo) => {
  */
 const getUserEvents = async (username) => {
   try {
+    const octokit = await getOctokit();
     const { data } = await octokit.rest.activity.listPublicEventsForUser({
       username,
       per_page: 50,
