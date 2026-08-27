@@ -28,7 +28,7 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 // Routes
-// TODO: app.use('/api/github', require('./src/routes/githubRoutes'));
+app.use('/api/github', require('./src/routes/githubRoutes'));
 // TODO: app.use('/api/ai', require('./src/routes/aiRoutes'));
 
 // Basic health check route
