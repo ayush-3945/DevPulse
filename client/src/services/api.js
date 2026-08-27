@@ -18,6 +18,10 @@ export const githubApi = {
   getLanguages: async (username) => {
     const response = await api.get(`/github/${username}/languages`);
     return response.data.data;
+  },
+  getPersonality: async (username) => {
+    const response = await api.post(`/ai/${username}/personality`);
+    return response.data.data;
   }
 };
 

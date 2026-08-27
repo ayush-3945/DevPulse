@@ -6,6 +6,7 @@ import ProfileCard from '../features/profile/ProfileCard';
 import ContributionHeatmap from '../features/heatmap/ContributionHeatmap';
 import LanguageCharts from '../features/languages/LanguageCharts';
 import RepoHealthGrid from '../features/repos/RepoHealthGrid';
+import PersonalityReport from '../features/personality/PersonalityReport';
 import { FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -19,6 +20,8 @@ const DashboardPage = () => {
   const [repos, setRepos] = useState(null);
   const [languages, setLanguages] = useState(null);
   const [languagesLoading, setLanguagesLoading] = useState(true);
+  const [personality, setPersonality] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -31,9 +34,8 @@ const DashboardPage = () => {
         setProfile(profileData);
         setLoading(false); // Stop main loading so profile shows
 
-        // Then fetch repos and languages
+        // Then fetch repos and languages concurrently
         setLanguagesLoading(true);
-        
         const [reposData, langsData] = await Promise.all([
           githubApi.getRepos(username),
           githubApi.getLanguages(username)
@@ -41,6 +43,12 @@ const DashboardPage = () => {
         
         setRepos(reposData);
         setLanguages(langsData);
+        setLanguagesLoading(false);
+
+        // Finally, fetch AI personality (takes longest)
+        setAiLoading(true);
+        const aiData = await githubApi.getPersonality(username);
+        setPersonality(aiData);
 
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -49,6 +57,7 @@ const DashboardPage = () => {
         setLoading(false);
       } finally {
         setLanguagesLoading(false);
+        setAiLoading(false);
       }
     };
 
@@ -98,7 +107,7 @@ const DashboardPage = () => {
           {/* Left Column (Profile & AI) */}
           <div className="lg:col-span-1 space-y-6">
             <ProfileCard profile={profile} />
-            {/* AI Personality Card will go here */}
+            <PersonalityReport report={personality} loading={aiLoading} />
           </div>
 
           {/* Right Column (Heatmap, Languages, Repos) */}
