@@ -1,2 +1,3 @@
-const app = require('../server/server.js');
-module.exports = app;
+module.exports = (req, res) => {
+  res.json({ message: 'Hello from Vercel native API' });
+};
