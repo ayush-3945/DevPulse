@@ -52,7 +52,7 @@ const PersonalityReport = ({ report, loading }) => {
                   <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
-                      animate={{ width: \`\${score * 10}%\` }}
+                      animate={{ width: `${score * 10}%` }}
                       transition={{ duration: 1, delay: 0.5 }}
                       className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" 
                     />
