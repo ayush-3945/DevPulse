@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import ProfileCard from '../features/profile/ProfileCard';
 import ContributionHeatmap from '../features/heatmap/ContributionHeatmap';
 import LanguageCharts from '../features/languages/LanguageCharts';
+import RepoHealthGrid from '../features/repos/RepoHealthGrid';
 import { FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -15,6 +16,7 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [repos, setRepos] = useState(null);
   const [languages, setLanguages] = useState(null);
   const [languagesLoading, setLanguagesLoading] = useState(true);
 
@@ -29,9 +31,15 @@ const DashboardPage = () => {
         setProfile(profileData);
         setLoading(false); // Stop main loading so profile shows
 
-        // Then fetch languages (can take longer because it aggregates repos)
+        // Then fetch repos and languages
         setLanguagesLoading(true);
-        const langsData = await githubApi.getLanguages(username);
+        
+        const [reposData, langsData] = await Promise.all([
+          githubApi.getRepos(username),
+          githubApi.getLanguages(username)
+        ]);
+        
+        setRepos(reposData);
         setLanguages(langsData);
 
       } catch (err) {
@@ -110,9 +118,16 @@ const DashboardPage = () => {
               )}
             </div>
             
-            {/* Phase 7: Repos Grid placeholder */}
-            <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 h-96 flex items-center justify-center border-dashed">
-              <span className="text-gray-500">Top Repositories (Coming soon)</span>
+            {/* Phase 7: Repos Grid */}
+            <div className="mt-6">
+              {languagesLoading ? (
+                <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 h-96 flex flex-col items-center justify-center">
+                  <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mb-3" />
+                  <span className="text-gray-500 text-sm">Analyzing repositories...</span>
+                </div>
+              ) : (
+                <RepoHealthGrid repos={repos} />
+              )}
             </div>
           </div>
           
