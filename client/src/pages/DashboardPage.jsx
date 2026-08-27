@@ -40,6 +40,10 @@ const DashboardPage = () => {
         const profileData = await Promise.race([profilePromise, timeoutPromise]);
         if (!isMounted) return;
 
+        if (!profileData || typeof profileData !== 'object' || !profileData.login) {
+          throw new Error('Invalid profile response received from server.');
+        }
+
         setProfile(profileData);
         setLoading(false); // Render dashboard layout immediately
 
