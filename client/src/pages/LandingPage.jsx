@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiSearch, FiGrid, FiShield, FiFingerprint } from 'react-icons/fi';
+import { FiSearch, FiGrid, FiShield } from 'react-icons/fi';
+import { LuFingerprint } from 'react-icons/lu';
 import Navbar from '../components/Navbar';
 
 const LandingPage = () => {
@@ -27,7 +28,7 @@ const LandingPage = () => {
       description: 'Actionable metrics on repo maintainability, stars, and engagement.'
     },
     {
-      icon: <FiFingerprint className="w-6 h-6 text-amber-gold" />,
+      icon: <LuFingerprint className="w-6 h-6 text-amber-gold" />,
       title: 'AI Developer Personality',
       description: 'Gemini AI analyzes your coding style and generates a unique profile.'
     }
@@ -115,7 +116,7 @@ const LandingPage = () => {
               {/* Mock AI Snippet */}
               <div className="flex-1 w-full space-y-4">
                 <div className="flex items-center gap-2">
-                  <FiFingerprint className="text-amber-gold w-5 h-5" />
+                  <LuFingerprint className="text-amber-gold w-5 h-5" />
                   <h4 className="text-amber-gold font-semibold text-sm tracking-widest uppercase">AI Analysis</h4>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed">
