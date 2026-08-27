@@ -3,7 +3,7 @@ import RepoCard from './RepoCard';
 import { motion } from 'framer-motion';
 
 const RepoHealthGrid = ({ repos }) => {
-  if (!repos || repos.length === 0) {
+  if (!repos || repos.length === 0 || !Array.isArray(repos)) {
     return (
       <div className="bg-gray-800/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 h-48 flex items-center justify-center">
         <p className="text-gray-400">No public repositories found.</p>

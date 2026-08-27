@@ -5,18 +5,9 @@ import { motion } from 'framer-motion';
 const ContributionHeatmap = ({ username }) => {
   const [year, setYear] = useState('last');
 
-  const theme = {
-    light: ['#1f2937', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'],
-    dark: ['#1f2937', '#3b82f6', '#2563eb', '#1d4ed8', '#1e40af'],
-  };
-
-  // We use standard colors for the dark theme to make it look premium
-  const explicitTheme = {
-    level0: '#1f2937', // gray-800
-    level1: '#581c87', // purple-900
-    level2: '#7e22ce', // purple-700
-    level3: '#a855f7', // purple-500
-    level4: '#d8b4fe', // purple-300
+  const validTheme = {
+    light: ['#1f2937', '#fcd34d', '#fbbf24', '#f59e0b', '#d97706'],
+    dark: ['#1f2937', '#fcd34d', '#fbbf24', '#f59e0b', '#d97706'],
   };
 
   return (
@@ -47,7 +38,7 @@ const ContributionHeatmap = ({ username }) => {
         <GitHubCalendar 
           username={username} 
           year={year === 'last' ? 'last' : year}
-          theme={explicitTheme}
+          theme={validTheme}
           colorScheme="dark"
           blockSize={14}
           blockMargin={4}
