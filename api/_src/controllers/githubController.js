@@ -21,13 +21,13 @@ const getProfile = async (req, res, next) => {
 
     const profileData = await githubService.getUserProfile(username);
 
-    // Save to cache if connected
+    // Save to cache asynchronously in background (do not block user response)
     if (mongoose.connection.readyState === 1) {
       if (!cached) {
         cached = new CachedProfile({ username: username.toLowerCase() });
       }
       cached.profileData = profileData;
-      await cached.save();
+      cached.save().catch(err => console.warn('Cache save warning:', err.message));
     }
 
     res.status(200).json({

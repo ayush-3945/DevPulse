@@ -1,15 +1,23 @@
 const mongoose = require('mongoose');
 
+let cachedConnection = null;
+
 const connectDB = async () => {
   try {
     if (!process.env.MONGODB_URI) return;
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 3000,
+    if (mongoose.connection.readyState === 1) return;
+    if (cachedConnection) return cachedConnection;
+
+    cachedConnection = mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 2000,
+      bufferCommands: false,
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+
+    await cachedConnection;
+    console.log('MongoDB Connected');
   } catch (error) {
-    console.error(`Error connecting to MongoDB: ${error.message}`);
-    // Do not exit process in Vercel
+    console.warn(`MongoDB Connection Warning: ${error.message}`);
+    cachedConnection = null;
   }
 };
 
