@@ -9,16 +9,20 @@ require('dotenv').config();
 
 const app = express();
 
+// Enable trust proxy for Vercel serverless environment
+app.set('trust proxy', 1);
+
 app.use(helmet());
+// CORS fix: origin must be true (reflecting request origin) when credentials is true
 app.use(cors({
-  origin: '*', 
+  origin: true, 
   credentials: true
 }));
 app.use(express.json());
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 150, 
+  max: 300, 
   message: 'Too many requests from this IP, please try again after 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
