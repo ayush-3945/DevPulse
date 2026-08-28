@@ -12,12 +12,16 @@ const app = express();
 // Enable trust proxy for Vercel serverless environment
 app.set('trust proxy', 1);
 
-app.use(helmet());
-// CORS fix: origin must be true (reflecting request origin) when credentials is true
-app.use(cors({
-  origin: true, 
-  credentials: true
-}));
+// Custom fail-proof CORS middleware for Vercel serverless
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 app.use(express.json());
 
 const apiLimiter = rateLimit({
